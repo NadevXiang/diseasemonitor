@@ -75,9 +75,8 @@ public class AuthController {
     public ResponseEntity generateSMScode(HttpServletRequest request,
                                           @RequestParam(required = false) String verifyCode,
                                           String phone,
-                                          SmsType smsType,
                                           @RequestHeader(required = false) String token) {
-        return ControllerUtil.getDataResult(userService.generateSMScode(IpUtils.getIpAddr(request), verifyCode, phone, smsType, token));
+        return ControllerUtil.getDataResult(userService.generateSMScode(IpUtils.getIpAddr(request), verifyCode, phone, token));
     }
 
     /**
@@ -85,10 +84,10 @@ public class AuthController {
      * 前台通过手机接收到的验证码和密码进行修改密码
      */
     @GetMapping("/newphone/phonecode")
-    @ApiOperation(value = "新手机号码获取手机验证码")
+    @ApiOperation(value = "忘记密码获取验证码")
     public ResponseEntity generateSMScodeForNewPhone(HttpServletRequest request,
-                                                     String phone) {
-        return ControllerUtil.getDataResult(userService.generateSMScodeForNewPhone(IpUtils.getIpAddr(request), phone));
+                                                     String phone, SmsType smsType) {
+        return ControllerUtil.getDataResult(userService.generateSMScodeForNewPhone(IpUtils.getIpAddr(request), phone, smsType));
     }
 
     @PostMapping("/password")

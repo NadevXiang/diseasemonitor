@@ -97,7 +97,7 @@ public interface UserService {
      * @param phone
      * @return
      */
-    Map<String, String> generateSMScode(String ipAddr, String verifyCode, String phone, SmsType smsType, String token);
+    Map<String, String> generateSMScode(String ipAddr, String verifyCode, String phone, String token);
 
     /**
      * 为新手机生成验证码，传入新手机号码，在redis中生成新手机号和验证码的相关记录
@@ -107,7 +107,7 @@ public interface UserService {
      * @param phone
      * @return
      */
-    Map<String, String> generateSMScodeForNewPhone(String ipAddr, String phone);
+    Map<String, String> generateSMScodeForNewPhone(String ipAddr, String phone, SmsType smsType);
 
     /**
      * 修改密码
