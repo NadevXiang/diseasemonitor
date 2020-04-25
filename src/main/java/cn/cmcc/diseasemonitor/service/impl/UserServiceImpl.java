@@ -298,7 +298,7 @@ public class UserServiceImpl implements UserService {
         /**
          * 前端说是手机号码 + 密码登录, 而不是用户名 + 密码登录
          */
-        User user = resp.findByPhone(username);
+        User user = resp.findByUserName(username);
 
         if (null == user) {
             // 没有找到用户
