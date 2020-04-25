@@ -66,12 +66,8 @@ public class AuthController {
         ImageIO.write(image, "png", os);
     }
 
-    /**
-     * 传入手机号码，验证码，生成一个验证码存到redis
-     * 前台通过手机接收到的验证码和密码进行修改密码
-     */
     @GetMapping("/phonecode")
-    @ApiOperation(value = "获取手机验证码")
+    @ApiOperation(value = "忘记密码时获取手机验证码")
     public ResponseEntity generateSMScode(HttpServletRequest request,
                                           @RequestParam(required = false) String verifyCode,
                                           String phone,
@@ -79,12 +75,8 @@ public class AuthController {
         return ControllerUtil.getDataResult(userService.generateSMScode(IpUtils.getIpAddr(request), verifyCode, phone, token));
     }
 
-    /**
-     * 传入手机号码，验证码，生成一个验证码存到redis
-     * 前台通过手机接收到的验证码和密码进行修改密码
-     */
     @GetMapping("/newphone/phonecode")
-    @ApiOperation(value = "忘记密码获取验证码")
+    @ApiOperation(value = "获取验证码")
     public ResponseEntity generateSMScodeForNewPhone(HttpServletRequest request,
                                                      String phone, SmsType smsType) {
         return ControllerUtil.getDataResult(userService.generateSMScodeForNewPhone(IpUtils.getIpAddr(request), phone, smsType));

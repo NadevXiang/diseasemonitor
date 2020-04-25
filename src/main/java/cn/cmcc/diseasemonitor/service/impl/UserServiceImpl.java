@@ -3,6 +3,7 @@ package cn.cmcc.diseasemonitor.service.impl;
 import cn.cmcc.diseasemonitor.repository.LaboratoryRepository;
 import cn.cmcc.diseasemonitor.util.*;
 import cn.cmcc.diseasemonitor.util.constant.SmsType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import cn.cmcc.diseasemonitor.entity.User;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
@@ -104,23 +106,35 @@ public class UserServiceImpl implements UserService {
     //这个ipAddr没啥用
     @Override
     public Map<String, String> generateSMScodeForNewPhone(String ipAddr, String phone, SmsType smsType) {
-        System.out.println("generateSMScodeForNewPhone,操作者IP：" + ipAddr);
+        log.info("generateSMScodeForNewPhone,操作者IP：" + ipAddr);
         Map<String, String> rs = new HashMap<>();
-        //模拟生成手机验证码
+
+        // 检查用户是否存在
+        if (resp.findByPhone(phone) == null) {
+            rs.put("STATUS", "FAILURE");
+            rs.put("ERROR", "该手机号尚未被绑定");
+            return rs;
+        }
+
         if (null != RedisUtil.getInstance().readDataFromRedis(ipAddr + "phoneCode")) {
             //这里应该报错，你的操作太快了，1分钟冷却时间未到。
             rs.put("STATUS", "FAILURE");
             rs.put("ERROR", "你的操作太快了，还没到一分钟");
             return rs;
         }
+
         //生成并发送到手机号码
         String code = MD5Util.randomNumsStr(4);
-        SmsUtil.send(code, smsType.getName(), phone);
-        // 验证码有效时间30分钟
-        RedisUtil.getInstance().setDataToRedis(code, phone, 30);
-        // flag 用于判断是否 发送验证码满 1 分钟了
-        RedisUtil.getInstance().setDataToRedis(ipAddr + "phoneCode", code, 1);
-        rs.put("STATUS", "SUCCESS");
+        boolean result = SmsUtil.send(code, smsType.getName(), phone);
+        if (result) {
+            // 验证码有效时间30分钟
+            RedisUtil.getInstance().setDataToRedis(code, phone, 30);
+            // flag 用于判断是否 发送验证码满 1 分钟了
+            RedisUtil.getInstance().setDataToRedis(ipAddr + "phoneCode", code, 1);
+            rs.put("STATUS", "SUCCESS");
+        } else {
+            rs.put("STATUS", "FAILURE");
+        }
         return rs;
     }
 
@@ -132,6 +146,13 @@ public class UserServiceImpl implements UserService {
         String tokenUserId = RedisUtil.getInstance().readDataFromRedis(token);
         // 先验证图片验证码, 防止恶意发送手机验证码
         Map<String, String> rs = new HashMap<>();
+
+        if (resp.findByPhone(phone) == null) {
+            rs.put("STATUS", "FAILURE");
+            rs.put("ERROR", "该手机号尚未被绑定");
+            return rs;
+        }
+
         String verify = RedisUtil.getInstance().readDataFromRedis(ipAddr + "verifycode");
         if (null == tokenUserId) {
             if (verifyCode == null || !verifyCode.toLowerCase().equals(verify.toLowerCase())) {
@@ -142,20 +163,7 @@ public class UserServiceImpl implements UserService {
             // 清除验证码
             RedisUtil.getInstance().setDataToRedis(ipAddr + "verifycode", "", 30);
         }
-        User user;
-        try {
-            user = resp.findByPhone(phone);
-        } catch (Exception e) {
-            e.printStackTrace();
-            rs.put("STATUS", "FAILURE");
-            rs.put("ERROR", e.getMessage());
-            return rs;
-        }
-        if (null == user) {
-            rs.put("STATUS", "FAILURE");
-            rs.put("ERROR", "该手机号尚未被绑定");
-            return rs;
-        }
+
 
         //模拟生成手机验证码
         String code = MD5Util.randomNumsStr(4);
